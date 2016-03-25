@@ -1,0 +1,163 @@
+package pprg.image.filter;
+
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+
+import javax.imageio.ImageIO;
+
+public class ImageFilter {
+
+	private static TimeLogger t = new TimeLogger();
+
+	public static void main(String[] args) throws IOException {
+
+		t.start();
+		BufferedImage img = ImageIO.read(new File("original.png"));
+		t.end("Read image");
+		BufferedImage output = new BufferedImage(img.getWidth(), img.getHeight(), BufferedImage.TYPE_INT_ARGB);
+
+		// t.start();
+		// int width = img.getWidth();
+		// int height = img.getHeight();
+		// int[][][] image = convertToArray(img, width, height);
+		// t.end("Convert to array");
+		//
+		// t.start();
+		// img = convertToImage(image, width, height);
+		// t.end("Convert to image");
+
+		traceColor(img, 300, 300);
+		traceColor(img, 300, 301);
+		traceColor(img, 300, 302);
+		traceColor(img, 301, 300);
+		traceColor(img, 301, 301);
+		traceColor(img, 301, 302);
+		traceColor(img, 302, 300);
+		traceColor(img, 302, 301);
+		traceColor(img, 302, 302);
+
+		t.start();
+		applyFilter(img, output, FilterGenerator.smoothingFilter(3));
+		t.end("Apply ITF");
+
+		traceColor(output, 300, 300);
+		traceColor(output, 300, 301);
+		traceColor(output, 300, 302);
+		traceColor(output, 301, 300);
+		traceColor(output, 301, 301);
+		traceColor(output, 301, 302);
+		traceColor(output, 302, 300);
+		traceColor(output, 302, 301);
+		traceColor(output, 302, 302);
+
+		t.start();
+		ImageIO.write(output, "png", new File("output.png"));
+		t.end("Write image");
+
+		// ScheduledExecutorService executor =
+		// Executors.newScheduledThreadPool(256);
+		// Runnable task = () -> {
+		// String threadName = Thread.currentThread().getName();
+		// System.out.println("Hello " + threadName);
+		// };
+		//
+		// executor.scheduleWithFixedDelay(task, 0, 1, TimeUnit.SECONDS);
+	}
+
+	private static void applyFilter(BufferedImage image, BufferedImage output, double[][] filter) {
+		int offset = (filter.length - 1) / 2;
+
+		// loop over all pixels (except border)
+		for (int y = offset; y < image.getHeight() - offset; y++) {
+			for (int x = offset; x < image.getWidth() - offset; x++) {
+
+				// loop over pixels for 1 mask
+				int[][] pixels = new int[filter.length][filter[0].length];
+				int i = 0, j = 0;
+				for (int z = -offset; z <= offset; z++) {
+					for (int a = -offset; a <= offset; a++) {
+						pixels[i][j++] = image.getRGB(x + z, y + a);
+					}
+					i++;
+					j = 0;
+				}
+
+				// apply filter with found pixels
+				output.setRGB(x, y, applyFilter(pixels, filter));
+			}
+		}
+	}
+
+	private static int applyFilter(int[][] pixels, double[][] filter) {
+		double alpha = 0, red = 0, green = 0, blue = 0;
+		for (int i = 0; i < pixels.length; i++) {
+			for (int j = 0; j < pixels.length; j++) {
+				alpha = getAlpha(pixels[i][j]);
+				red += getRed(pixels[i][j]) * filter[i][j];
+				blue += getGreen(pixels[i][j]) * filter[i][j];
+				green += getBlue(pixels[i][j]) * filter[i][j];
+			}
+		}
+
+		return getColor((int) Math.round(alpha), (int) Math.round(red), (int) Math.round(green),
+				(int) Math.round(blue));
+	}
+
+	private static int getAlpha(int color) {
+		return (color >> 24) & 0xff;
+	}
+
+	private static int getRed(int color) {
+		return (color >> 16) & 0xff;
+	}
+
+	private static int getGreen(int color) {
+		return (color >> 8) & 0xff;
+	}
+
+	private static int getBlue(int color) {
+		return color & 0xff;
+	}
+
+	private static int getColor(int alpha, int red, int green, int blue) {
+		return (alpha << 24) | (red << 16) | (green << 8) | blue;
+	}
+
+	private static void traceColor(BufferedImage image, int x, int y) {
+		int color = image.getRGB(x, y);
+		System.out.printf("pixel (%4d,%4d) - alpha: %3d, red: %3d, green: %3d, blue: %3d\n", x, y, getAlpha(color),
+				getRed(color), getGreen(color), getBlue(color));
+	}
+
+	private static int[][][] convertToArray(BufferedImage image, int width, int height) {
+		int[][][] result = new int[width][height][4];
+
+		for (int y = 0; y < height; y++) {
+			for (int x = 0; x < width; x++) {
+				int pixel = image.getRGB(x, y);
+				int alpha = (pixel >> 24) & 0xff;
+				int red = (pixel >> 16) & 0xff;
+				int green = (pixel >> 8) & 0xff;
+				int blue = (pixel) & 0xff;
+				result[x][y][0] = red;
+				result[x][y][1] = green;
+				result[x][y][2] = blue;
+				result[x][y][3] = alpha;
+			}
+		}
+
+		return result;
+	}
+
+	private static BufferedImage convertToImage(int[][][] array, int width, int height) {
+		BufferedImage ret = new BufferedImage(array.length, array[0].length, BufferedImage.TYPE_INT_ARGB);
+		for (int y = 0; y < height; y++) {
+			for (int x = 0; x < width; x++) {
+				int color = (array[x][y][3] << 24) | (array[x][y][0] << 16) | (array[x][y][1] << 8) | array[x][y][2];
+				ret.setRGB(x, y, color);
+			}
+		}
+		return ret;
+	}
+}
