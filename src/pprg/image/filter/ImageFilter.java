@@ -28,13 +28,13 @@ public class ImageFilter {
 		traceColor(img, 4, 4);
 
 		t.start();
-		applyFilter(img, output, FilterGenerator.smoothingFilter(9));
+		applyFilter(img, output, FilterGenerator.sharpeningFilter());
 		t.end("Apply ITF");
 
 		traceColor(output, 3, 3);
 
 		t.start();
-		ImageIO.write(output, "png", new File("blur9.png"));
+		ImageIO.write(output, "png", new File("output.png"));
 		t.end("Write image");
 
 		// ScheduledExecutorService executor =
