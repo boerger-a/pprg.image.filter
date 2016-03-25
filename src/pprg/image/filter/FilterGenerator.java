@@ -11,4 +11,8 @@ public class FilterGenerator {
 		}
 		return filter;
 	}
+
+	public static double[][] nonChangingFilter() {
+		return new double[][] { { 0d, 0d, 0d }, { 0d, 1d, 0d }, { 0d, 0d, 0d } };
+	}
 }

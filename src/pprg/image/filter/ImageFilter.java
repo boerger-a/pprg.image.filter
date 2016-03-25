@@ -17,42 +17,24 @@ public class ImageFilter {
 		t.end("Read image");
 		BufferedImage output = new BufferedImage(img.getWidth(), img.getHeight(), BufferedImage.TYPE_INT_ARGB);
 
-		// t.start();
-		// int width = img.getWidth();
-		// int height = img.getHeight();
-		// int[][][] image = convertToArray(img, width, height);
-		// t.end("Convert to array");
-		//
-		// t.start();
-		// img = convertToImage(image, width, height);
-		// t.end("Convert to image");
-
-		traceColor(img, 300, 300);
-		traceColor(img, 300, 301);
-		traceColor(img, 300, 302);
-		traceColor(img, 301, 300);
-		traceColor(img, 301, 301);
-		traceColor(img, 301, 302);
-		traceColor(img, 302, 300);
-		traceColor(img, 302, 301);
-		traceColor(img, 302, 302);
+		traceColor(img, 2, 2);
+		traceColor(img, 2, 3);
+		traceColor(img, 2, 4);
+		traceColor(img, 3, 2);
+		traceColor(img, 3, 3);
+		traceColor(img, 3, 4);
+		traceColor(img, 4, 2);
+		traceColor(img, 4, 3);
+		traceColor(img, 4, 4);
 
 		t.start();
-		applyFilter(img, output, FilterGenerator.smoothingFilter(3));
+		applyFilter(img, output, FilterGenerator.smoothingFilter(9));
 		t.end("Apply ITF");
 
-		traceColor(output, 300, 300);
-		traceColor(output, 300, 301);
-		traceColor(output, 300, 302);
-		traceColor(output, 301, 300);
-		traceColor(output, 301, 301);
-		traceColor(output, 301, 302);
-		traceColor(output, 302, 300);
-		traceColor(output, 302, 301);
-		traceColor(output, 302, 302);
+		traceColor(output, 3, 3);
 
 		t.start();
-		ImageIO.write(output, "png", new File("output.png"));
+		ImageIO.write(output, "png", new File("blur9.png"));
 		t.end("Write image");
 
 		// ScheduledExecutorService executor =
@@ -95,8 +77,8 @@ public class ImageFilter {
 			for (int j = 0; j < pixels.length; j++) {
 				alpha = getAlpha(pixels[i][j]);
 				red += getRed(pixels[i][j]) * filter[i][j];
-				blue += getGreen(pixels[i][j]) * filter[i][j];
-				green += getBlue(pixels[i][j]) * filter[i][j];
+				green += getGreen(pixels[i][j]) * filter[i][j];
+				blue += getBlue(pixels[i][j]) * filter[i][j];
 			}
 		}
 
@@ -128,36 +110,5 @@ public class ImageFilter {
 		int color = image.getRGB(x, y);
 		System.out.printf("pixel (%4d,%4d) - alpha: %3d, red: %3d, green: %3d, blue: %3d\n", x, y, getAlpha(color),
 				getRed(color), getGreen(color), getBlue(color));
-	}
-
-	private static int[][][] convertToArray(BufferedImage image, int width, int height) {
-		int[][][] result = new int[width][height][4];
-
-		for (int y = 0; y < height; y++) {
-			for (int x = 0; x < width; x++) {
-				int pixel = image.getRGB(x, y);
-				int alpha = (pixel >> 24) & 0xff;
-				int red = (pixel >> 16) & 0xff;
-				int green = (pixel >> 8) & 0xff;
-				int blue = (pixel) & 0xff;
-				result[x][y][0] = red;
-				result[x][y][1] = green;
-				result[x][y][2] = blue;
-				result[x][y][3] = alpha;
-			}
-		}
-
-		return result;
-	}
-
-	private static BufferedImage convertToImage(int[][][] array, int width, int height) {
-		BufferedImage ret = new BufferedImage(array.length, array[0].length, BufferedImage.TYPE_INT_ARGB);
-		for (int y = 0; y < height; y++) {
-			for (int x = 0; x < width; x++) {
-				int color = (array[x][y][3] << 24) | (array[x][y][0] << 16) | (array[x][y][1] << 8) | array[x][y][2];
-				ret.setRGB(x, y, color);
-			}
-		}
-		return ret;
 	}
 }
