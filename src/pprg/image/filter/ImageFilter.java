@@ -11,7 +11,7 @@ import javax.imageio.ImageIO;
 
 public class ImageFilter {
 
-	private static final int NUM_THREADS = 5;
+	private static final int NUM_THREADS = 100;
 	private static TimeLogger t = new TimeLogger();
 
 	public static void main(String[] args) throws IOException {
@@ -42,34 +42,29 @@ public class ImageFilter {
 
 		ExecutorService executor = Executors.newFixedThreadPool(NUM_THREADS);
 
-		// generate chunks on x axis and start NUM_THREADS
-		for (int chunk = offset; chunk < image.length - offset; chunk += NUM_THREADS) {
+		// loop over all pixels (except border)
+		for (int x = offset; x < image.length - offset; x++) {
+			for (int y = offset; y < image[0].length - offset; y++) {
 
-			// loop over all pixels (except border)
-			final int chunkk = chunk;
-			Runnable task = () -> {
-				for (int x = chunkk; x < (chunkk + NUM_THREADS) && (x < image.length - offset); x++) {
-					for (int y = offset; y < image[0].length - offset; y++) {
-
-						// loop over pixels for 1 mask
-						final int xx = x;
-						final int yy = y;
-						int[][][] pixels = new int[filter.length][filter[0].length][4];
-						int i = 0, j = 0;
-						for (int z = -offset; z <= offset; z++) {
-							for (int a = -offset; a <= offset; a++) {
-								pixels[i][j++] = image[xx + z][yy + a];
-							}
-							i++;
-							j = 0;
+				// loop over pixels for 1 mask
+				final int xx = x;
+				final int yy = y;
+				Runnable task = () -> {
+					int[][][] pixels = new int[filter.length][filter[0].length][4];
+					int i = 0, j = 0;
+					for (int z = -offset; z <= offset; z++) {
+						for (int a = -offset; a <= offset; a++) {
+							pixels[i][j++] = image[xx + z][yy + a];
 						}
-
-						// apply filter with found pixels
-						image[xx][yy] = applyFilterOnPixel(pixels, filter);
+						i++;
+						j = 0;
 					}
-				}
-			};
-			executor.execute(task);
+
+					// apply filter with found pixels
+					image[xx][yy] = applyFilterOnPixel(pixels, filter);
+				};
+				executor.execute(task);
+			}
 		}
 
 		executor.shutdown();

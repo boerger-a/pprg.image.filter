@@ -1,0 +1,10 @@
+Image	1920x1280	
+Filter	9x9	
+		
+Apply ITF with Array		
+Threads	Every Pixel		Chunks
+1		16,888			13,484
+2		12,763			 9,099
+5		11,726			 7,240
+10		10,888			 7,253
+100		11,960			 7,325
