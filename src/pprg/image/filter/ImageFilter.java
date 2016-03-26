@@ -23,7 +23,7 @@ public class ImageFilter {
 		t.start();
 		BufferedImage output = new BufferedImage(img.getWidth(), img.getHeight(), BufferedImage.TYPE_INT_ARGB);
 		applyFilter(img, output, FilterGenerator.smoothingFilter(9));
-		t.end("Apply ITF");
+		t.end("Apply Filter");
 
 		t.start();
 		ImageIO.write(output, "png", new File("output.png"));
