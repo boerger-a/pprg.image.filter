@@ -11,7 +11,7 @@ import javax.imageio.ImageIO;
 
 public class ImageFilter {
 
-	private static final int NUM_THREADS = 100;
+	private static final int NUM_THREADS = 1;
 	private static TimeLogger t = new TimeLogger();
 
 	public static void main(String[] args) throws IOException {
@@ -21,48 +21,41 @@ public class ImageFilter {
 		t.end("Read image");
 
 		t.start();
-		int[][][] array = convertToArray(img, img.getWidth(), img.getHeight());
-		t.end("Convert to array");
-
-		t.start();
-		applyFilter(array, FilterGenerator.smoothingFilter(9));
+		BufferedImage output = new BufferedImage(img.getWidth(), img.getHeight(), BufferedImage.TYPE_INT_ARGB);
+		applyFilter(img, output, FilterGenerator.smoothingFilter(9));
 		t.end("Apply ITF");
-
-		t.start();
-		BufferedImage output = convertToImage(array, img.getWidth(), img.getHeight());
-		t.end("Convert to image");
 
 		t.start();
 		ImageIO.write(output, "png", new File("output.png"));
 		t.end("Write image");
 	}
 
-	private static void applyFilter(int[][][] image, double[][] filter) {
+	private static void applyFilter(BufferedImage image, BufferedImage output, double[][] filter) {
 		int offset = (filter.length - 1) / 2;
 
 		ExecutorService executor = Executors.newFixedThreadPool(NUM_THREADS);
 
 		// loop over all pixels (except border)
-		for (int x = offset; x < image.length - offset; x++) {
-			for (int y = offset; y < image[0].length - offset; y++) {
-
+		for (int y = offset; y < image.getHeight() - offset; y++) {
+			for (int x = offset; x < image.getWidth() - offset; x++) {
 				// loop over pixels for 1 mask
 				final int xx = x;
 				final int yy = y;
 				Runnable task = () -> {
-					int[][][] pixels = new int[filter.length][filter[0].length][4];
+					// loop over pixels for 1 mask
+					int[][] pixels = new int[filter.length][filter[0].length];
 					int i = 0, j = 0;
 					for (int z = -offset; z <= offset; z++) {
 						for (int a = -offset; a <= offset; a++) {
-							pixels[i][j++] = image[xx + z][yy + a];
+							pixels[i][j++] = image.getRGB(xx + z, yy + a);
 						}
 						i++;
 						j = 0;
 					}
-
 					// apply filter with found pixels
-					image[xx][yy] = applyFilterOnPixel(pixels, filter);
+					output.setRGB(xx, yy, applyFilter(pixels, filter));
 				};
+
 				executor.execute(task);
 			}
 		}
@@ -75,19 +68,19 @@ public class ImageFilter {
 		}
 	}
 
-	private static int[] applyFilterOnPixel(int[][][] pixels, double[][] filter) {
+	private static int applyFilter(int[][] pixels, double[][] filter) {
 		double alpha = 0, red = 0, green = 0, blue = 0;
 		for (int i = 0; i < pixels.length; i++) {
 			for (int j = 0; j < pixels.length; j++) {
-				red += pixels[i][j][0] * filter[i][j];
-				green += pixels[i][j][1] * filter[i][j];
-				blue += pixels[i][j][2] * filter[i][j];
-				alpha = pixels[i][j][3];
+				alpha = getAlpha(pixels[i][j]);
+				red += getRed(pixels[i][j]) * filter[i][j];
+				green += getGreen(pixels[i][j]) * filter[i][j];
+				blue += getBlue(pixels[i][j]) * filter[i][j];
 			}
 		}
 
-		return new int[] { (int) Math.round(red), (int) Math.round(green), (int) Math.round(blue),
-				(int) Math.round(alpha) };
+		return getColor((int) Math.round(alpha), (int) Math.round(red), (int) Math.round(green),
+				(int) Math.round(blue));
 	}
 
 	private static int getAlpha(int color) {
