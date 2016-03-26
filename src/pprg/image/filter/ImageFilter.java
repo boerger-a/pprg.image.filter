@@ -35,29 +35,31 @@ public class ImageFilter {
 
 		ExecutorService executor = Executors.newFixedThreadPool(NUM_THREADS);
 
-		// loop over all pixels (except border)
-		for (int y = offset; y < image.getHeight() - offset; y++) {
-			for (int x = offset; x < image.getWidth() - offset; x++) {
-				// loop over pixels for 1 mask
-				final int xx = x;
-				final int yy = y;
-				Runnable task = () -> {
-					// loop over pixels for 1 mask
-					int[][] pixels = new int[filter.length][filter[0].length];
-					int i = 0, j = 0;
-					for (int z = -offset; z <= offset; z++) {
-						for (int a = -offset; a <= offset; a++) {
-							pixels[i][j++] = image.getRGB(xx + z, yy + a);
-						}
-						i++;
-						j = 0;
-					}
-					// apply filter with found pixels
-					output.setRGB(xx, yy, applyFilter(pixels, filter));
-				};
+		// generate chunks on x axis and start NUM_THREADS
+		for (int chunk = offset; chunk < image.getWidth() - offset; chunk += NUM_THREADS) {
 
-				executor.execute(task);
-			}
+			// loop over all pixels (except border)
+			final int chunkk = chunk;
+			Runnable task = () -> {
+				for (int x = chunkk; x < (chunkk + NUM_THREADS) && (x < image.getWidth() - offset); x++) {
+					for (int y = offset; y < image.getHeight() - offset; y++) {
+						// loop over pixels for 1 mask
+						int[][] pixels = new int[filter.length][filter[0].length];
+						int i = 0, j = 0;
+						for (int z = -offset; z <= offset; z++) {
+							for (int a = -offset; a <= offset; a++) {
+								pixels[i][j++] = image.getRGB(x + z, y + a);
+							}
+							i++;
+							j = 0;
+						}
+						// apply filter with found pixels
+						output.setRGB(x, y, applyFilter(pixels, filter));
+					}
+				}
+			};
+
+			executor.execute(task);
 		}
 
 		executor.shutdown();

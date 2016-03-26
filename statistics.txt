@@ -8,3 +8,11 @@ Threads	Every Pixel		Chunks
 5		11,726			 7,240
 10		10,888			 7,253
 100		11,960			 7,325
+
+Apply ITF without Array		
+Threads	Every Pixel		Chunks
+1		16,986			13,086
+2		12,298			 7,889
+5		 9,006			 6,315
+10		 9,045			 6,237
+100		 9,410			 6,413
