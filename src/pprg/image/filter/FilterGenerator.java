@@ -2,6 +2,7 @@ package pprg.image.filter;
 
 public class FilterGenerator {
 
+	// Smoothing/Blurring filter mask
 	public static double[][] smoothingFilter(int parameter) {
 		if (parameter % 2 != 1) {
 			throw new IllegalArgumentException("Filter has to be odd size");
@@ -15,12 +16,14 @@ public class FilterGenerator {
 		return filter;
 	}
 	
+	// Filter doesn't change image - for testing purposes
 	public static double[][] nonChangingFilter() {
 		return new double[][] { { 0d, 0d, 0d }
 							  , { 0d, 1d, 0d }
 							  , { 0d, 0d, 0d } };
 	}
 
+	// Laplacian of Gaussian filter mask
 	public static double[][] detectEdgesLoGFilter() {
 		return new double[][] { { 0.0448, 0.0468,  0.0564, 0.0468, 0.0448 }
 		  					  , { 0.0468, 0.3167,  0.7146, 0.3167, 0.0468 }
@@ -29,19 +32,22 @@ public class FilterGenerator {
 		  					  , { 0.0448, 0.0468,  0.0564, 0.0468, 0.0448 } };
 	}
 
+	// Sobel filter mask for vertical edges
 	public static double[][] detectVerticalEdgesSobelFilter() {
 		return new double[][] { {  1d,  2d,  1d }
 		  					  , {  0d,  0d,  0d }		  
 		  					  , { -1d, -2d, -1d } };
 	}
 
+	// Sobel filter mask for horizontal edges
 	public static double[][] detectHorizontalEdgesSobelFilter() {
 		return new double[][] { { 1d,  0d, -1d }
 		  					  , { 2d,  0d, -2d }		  
 		  					  , { 1d,  0d, -1d } };
 	}
 
-	public static double[][] sharpeningFilter(int parameter) {
+	// Unsharp filter mask
+	public static double[][] unsharpFilter(int parameter) {
 		if (parameter % 2 != 1) {
 			throw new IllegalArgumentException("Filter has to be odd size");
 		}
